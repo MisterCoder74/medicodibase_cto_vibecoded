@@ -35,8 +35,9 @@ try {
             $date = trim($_POST['date'] ?? '');
             $time = trim($_POST['time'] ?? '');
             $reason = trim($_POST['reason'] ?? '');
+            $notes = trim($_POST['notes'] ?? '');
             $status = trim($_POST['status'] ?? STATUS_PENDING);
-            
+
             // Validation
             if (empty($patientId)) {
                 errorResponse('Paziente è obbligatorio');
@@ -47,13 +48,13 @@ try {
             if (empty($time)) {
                 errorResponse('Ora è obbligatoria');
             }
-            
+
             // Verify patient exists
             $patient = getPatientById($patientId);
             if (!$patient) {
                 errorResponse('Paziente non trovato', 404);
             }
-            
+
             // Create new appointment
             $newAppointment = [
                 'id' => generateId(),
@@ -62,17 +63,18 @@ try {
                 'date' => $date,
                 'time' => $time,
                 'reason' => $reason,
+                'notes' => $notes,
                 'status' => $status,
                 'createdAt' => date('Y-m-d H:i:s')
             ];
-            
+
             $appointments = readJSON(APPOINTMENTS_FILE);
             $appointments[] = $newAppointment;
             writeJSON(APPOINTMENTS_FILE, $appointments);
-            
+
             // Send email notification
             sendAppointmentEmail($newAppointment, $patient, 'create');
-            
+
             successResponse($newAppointment);
             break;
             
@@ -82,8 +84,9 @@ try {
             $date = trim($_POST['date'] ?? '');
             $time = trim($_POST['time'] ?? '');
             $reason = trim($_POST['reason'] ?? '');
+            $notes = trim($_POST['notes'] ?? '');
             $status = trim($_POST['status'] ?? STATUS_PENDING);
-            
+
             // Validation
             if (empty($id)) {
                 errorResponse('ID appuntamento è obbligatorio');
@@ -97,16 +100,16 @@ try {
             if (empty($time)) {
                 errorResponse('Ora è obbligatoria');
             }
-            
+
             // Verify patient exists
             $patient = getPatientById($patientId);
             if (!$patient) {
                 errorResponse('Paziente non trovato', 404);
             }
-            
+
             $appointments = readJSON(APPOINTMENTS_FILE);
             $found = false;
-            
+
             foreach ($appointments as &$appointment) {
                 if ($appointment['id'] === $id) {
                     $appointment['patientId'] = $patientId;
@@ -114,24 +117,25 @@ try {
                     $appointment['date'] = $date;
                     $appointment['time'] = $time;
                     $appointment['reason'] = $reason;
+                    $appointment['notes'] = $notes;
                     $appointment['status'] = $status;
                     $appointment['updatedAt'] = date('Y-m-d H:i:s');
-                    
+
                     $found = true;
                     $updatedAppointment = $appointment;
                     break;
                 }
             }
-            
+
             if (!$found) {
                 errorResponse('Appuntamento non trovato', 404);
             }
-            
+
             writeJSON(APPOINTMENTS_FILE, $appointments);
-            
+
             // Send email notification
             sendAppointmentEmail($updatedAppointment, $patient, 'update');
-            
+
             successResponse($updatedAppointment);
             break;
             
