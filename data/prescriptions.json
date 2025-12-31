@@ -1,74 +1,13 @@
 [
-  {
-    "id": "p1",
-    "patientId": "1",
-    "patientName": "Mario Rossi",
-    "date": "2024-03-01",
-    "drugs": "Metformina 500mg - 1 compressa 2 volte al giorno\nRamipril 5mg - 1 compressa al mattino\nAspirina 100mg - 1 compressa al giorno",
-    "notes": "Assumere con i pasti. Controllo glicemia settimanale.",
-    "createdAt": "2024-03-01 10:15:00"
-  },
-  {
-    "id": "p2",
-    "patientId": "2",
-    "patientName": "Giulia Verdi",
-    "date": "2024-03-05",
-    "drugs": "Bisoprololo 2.5mg - 1 compressa al mattino\nCoumadin 5mg - secondo schema INR",
-    "notes": "Controllo INR ogni 2 settimane. Evitare cibi ricchi di vitamina K.",
-    "createdAt": "2024-03-05 14:30:00"
-  },
-  {
-    "id": "p3",
-    "patientId": "3",
-    "patientName": "Paolo Bianchi",
-    "date": "2024-03-10",
-    "drugs": "Amoxicillina 1g - 1 compressa 2 volte al giorno per 7 giorni",
-    "notes": "Per infezione respiratoria. Completare il ciclo anche se i sintomi migliorano.",
-    "createdAt": "2024-03-10 09:45:00"
-  },
-  {
-    "id": "p4",
-    "patientId": "4",
-    "patientName": "Anna Neri",
-    "date": "2024-03-12",
-    "drugs": "Salbutamolo spray - 2 puff al bisogno\nFluticasone spray nasale - 2 spruzzi per narice al mattino\nCetirizina 10mg - 1 compressa alla sera",
-    "notes": "Per controllo sintomi allergici stagionali. Continuare per tutto il periodo.",
-    "createdAt": "2024-03-12 11:00:00"
-  },
-  {
-    "id": "p5",
-    "patientId": "5",
-    "patientName": "Marco Ferrari",
-    "date": "2024-03-15",
-    "drugs": "Ibuprofene 400mg - 1 compressa fino a 3 volte al giorno al bisogno",
-    "notes": "Per dolore lombare. Assumere dopo i pasti.",
-    "createdAt": "2024-03-15 15:20:00"
-  },
-  {
-    "id": "p6",
-    "patientId": "1",
-    "patientName": "Mario Rossi",
-    "date": "2024-03-20",
-    "drugs": "Atorvastatina 20mg - 1 compressa alla sera",
-    "notes": "Aggiunto per controllo colesterolo. Controllo lipidi tra 3 mesi.",
-    "createdAt": "2024-03-20 10:00:00"
-  },
-  {
-    "id": "p7",
-    "patientId": "4",
-    "patientName": "Anna Neri",
-    "date": "2024-03-25",
-    "drugs": "Montelukast 10mg - 1 compressa alla sera",
-    "notes": "Aggiunto per miglior controllo asma. Valutare efficacia dopo 1 mese.",
-    "createdAt": "2024-03-25 16:45:00"
-  },
-  {
-    "id": "p8",
-    "patientId": "2",
-    "patientName": "Giulia Verdi",
-    "date": "2024-03-28",
-    "drugs": "Atorvastatina 10mg - 1 compressa alla sera",
-    "notes": "Per prevenzione cardiovascolare. Controllo funzionalità epatica tra 3 mesi.",
-    "createdAt": "2024-03-28 14:15:00"
-  }
+    {
+        "id": "695550d43bd776.00177792",
+        "patientId": "695542bab4a374.72544060",
+        "patientName": "alessandro demontis",
+        "date": "2025-12-31",
+        "drugs": "toradol 50ml",
+        "dosage": "20 gcc\/dì",
+        "duration": "5gg",
+        "notes": "",
+        "createdAt": "2025-12-31 17:35:32"
+    }
 ]
