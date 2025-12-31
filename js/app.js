@@ -246,7 +246,7 @@ function renderCalendar() {
  */
 async function loadSensitivePatients() {
   try {
-    const response = await fetch('php/sensitive_patients.php?action=list', { cache: 'no-store' });
+    const response = await fetch('./php/sensitive_patients.php?action=list', { cache: 'no-store' });
     const data = await response.json();
     
     if (data.success) {
@@ -429,7 +429,7 @@ async function deletePatient(id) {
     formData.append('action', 'delete');
     formData.append('id', id);
     
-    const response = await fetch('php/patients_api.php', {
+    const response = await fetch('./php/patients_api.php', {
       method: 'POST',
       body: formData,
       cache: 'no-store'
@@ -471,7 +471,7 @@ async function handlePatientSubmit(e) {
   formData.append('sensitiveNotes', document.getElementById('patientSensitiveNotes').value);
   
   try {
-    const response = await fetch('php/patients_api.php', {
+    const response = await fetch('./php/patients_api.php', {
       method: 'POST',
       body: formData,
       cache: 'no-store'
@@ -578,7 +578,7 @@ async function deletePrescription(id) {
     formData.append('action', 'delete');
     formData.append('id', id);
     
-    const response = await fetch('php/prescriptions_api.php', {
+    const response = await fetch('./php/prescriptions_api.php', {
       method: 'POST',
       body: formData,
       cache: 'no-store'
@@ -602,7 +602,7 @@ async function deletePrescription(id) {
  * Print prescription
  */
 function printPrescription(id) {
-  window.open(`php/prescriptions_api.php?action=print&id=${id}`, '_blank');
+  window.open(`./php/prescriptions_api.php?action=print&id=${id}`, '_blank');
 }
 
 /**
@@ -625,7 +625,7 @@ async function handlePrescriptionSubmit(e) {
   formData.append('notes', document.getElementById('prescriptionNotes').value);
 
   try {
-    const response = await fetch('php/prescriptions_api.php', {
+    const response = await fetch('./php/prescriptions_api.php', {
       method: 'POST',
       body: formData,
       cache: 'no-store'
@@ -699,7 +699,7 @@ async function deleteAppointment(id) {
     formData.append('action', 'delete');
     formData.append('id', id);
     
-    const response = await fetch('php/appointments_api.php', {
+    const response = await fetch('./php/appointments_api.php', {
       method: 'POST',
       body: formData,
       cache: 'no-store'
@@ -734,7 +734,7 @@ async function updateAppointmentStatus(id, status) {
     formData.append('id', id);
     formData.append('status', status);
     
-    const response = await fetch('php/appointments_api.php', {
+    const response = await fetch('./php/appointments_api.php', {
       method: 'POST',
       body: formData,
       cache: 'no-store'
@@ -774,7 +774,7 @@ async function handleAppointmentSubmit(e) {
   formData.append('status', document.getElementById('appointmentStatus').value);
 
   try {
-    const response = await fetch('php/appointments_api.php', {
+    const response = await fetch('./php/appointments_api.php', {
       method: 'POST',
       body: formData,
       cache: 'no-store'
@@ -1085,12 +1085,14 @@ function populateAppointmentsTab(patientId) {
 function populateDocumentsTab(patient) {
   const documentsList = document.getElementById('documentsList');
 
-  fetch(`php/documents_api.php?action=list&ssn=${patient.ssn}`, { cache: 'no-store' })
+  fetch(`./php/documents_api.php?action=list&ssn=${patient.ssn}`, { cache: 'no-store' })
     .then(response => response.json())
     .then(data => {
       documentsList.innerHTML = '';
 
-      if (!data.success || !data.documents || data.documents.length === 0) {
+      const documents = data.data && data.data.documents ? data.data.documents : [];
+
+		if (!data.success || documents.length === 0) {
         documentsList.innerHTML = `
           <div class="text-center text-muted py-4">
             <i class="bi bi-folder" style="font-size: 3rem;"></i>
@@ -1100,7 +1102,7 @@ function populateDocumentsTab(patient) {
         return;
       }
 
-      data.documents.forEach(doc => {
+      documents.forEach(doc => {
         const icon = getDocumentIcon(doc.extension);
         const item = document.createElement('div');
         item.className = 'document-item card mb-2';
@@ -1119,7 +1121,7 @@ function populateDocumentsTab(patient) {
                 </small>
               </div>
               <div class="col-auto">
-                <a href="patients/${patient.ssn}/assets/${doc.filename}"
+                <a href="../patients/${patient.ssn}/assets/${doc.filename}"
                    class="btn btn-sm btn-info" download title="Scarica">
                   <i class="bi bi-download"></i>
                 </a>
@@ -1236,7 +1238,7 @@ function savePatientChanges() {
   formData.append('isSensitive', updatedData.isSensitive ? 'true' : 'false');
   formData.append('sensitiveNotes', updatedData.sensitiveNotes);
 
-  fetch('/php/patients_api.php', {
+  fetch('./php/patients_api.php', {
     method: 'POST',
     body: formData,
     cache: 'no-store'
@@ -1426,7 +1428,7 @@ function uploadPatientDocument() {
   formData.append('ssn', patient.ssn);
   formData.append('category', categorySelect.value);
 
-  fetch('/php/documents_api.php?action=upload', {
+  fetch('./php/documents_api.php?action=upload', {
     method: 'POST',
     body: formData,
     cache: 'no-store'
@@ -1458,7 +1460,7 @@ function deleteDocument(ssn, filename) {
   formData.append('ssn', ssn);
   formData.append('filename', filename);
 
-  fetch('/php/documents_api.php', {
+  fetch('./php/documents_api.php', {
     method: 'POST',
     body: formData,
     cache: 'no-store'
@@ -1574,7 +1576,7 @@ function changeAppointmentStatus(id, newStatus) {
   formData.append('status', newStatus);
   formData.append('notes', appointment.notes || '');
 
-  fetch('/php/appointments_api.php', {
+  fetch('./php/appointments_api.php', {
     method: 'POST',
     body: formData,
     cache: 'no-store'
