@@ -1,4 +1,7 @@
 # Studio Medico - Medical Office Management System MVP
+Alessandro Demontis for Vivacty Design Web Agency
+Vibecoded with CTO.NEW
+31-12-2025
 
 A complete web application for managing medical office operations including patient records, prescriptions, appointments, and file attachments.
 
