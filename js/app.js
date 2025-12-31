@@ -108,15 +108,15 @@ function renderPatients() {
         ${patient.isSensitive ? '<span class="badge badge-sensitive">Sensibile</span>' : '<span class="badge bg-secondary">No</span>'}
       </td>
       <td>
-        <button class="btn btn-sm btn-info btn-action" onclick="openPatientDetail('${patient.id}')" title="Dettagli">
-          <i class="bi bi-eye"></i>
-        </button>
-        <button class="btn btn-sm btn-primary btn-action" onclick="editPatient('${patient.id}')" title="Modifica">
-          <i class="bi bi-pencil"></i>
-        </button>
-        <button class="btn btn-sm btn-danger btn-action" onclick="deletePatient('${patient.id}')" title="Elimina">
-          <i class="bi bi-trash"></i>
-        </button>
+       <button class="btn btn-sm btn-info" onclick="openPatientDetail('${patient.id}')">
+         <i class="bi bi-eye"></i> View Details
+       </button>
+       <button class="btn btn-sm btn-primary btn-action" onclick="editPatient('${patient.id}')" title="Modifica">
+         <i class="bi bi-pencil"></i>
+       </button>
+       <button class="btn btn-sm btn-danger btn-action" onclick="deletePatient('${patient.id}')" title="Elimina">
+         <i class="bi bi-trash"></i>
+       </button>
       </td>
     </tr>
   `).join('');
