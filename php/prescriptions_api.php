@@ -24,8 +24,10 @@ try {
             $patientId = trim($_POST['patientId'] ?? '');
             $date = trim($_POST['date'] ?? '');
             $drugs = trim($_POST['drugs'] ?? '');
+            $dosage = trim($_POST['dosage'] ?? '');
+            $duration = trim($_POST['duration'] ?? '');
             $notes = trim($_POST['notes'] ?? '');
-            
+
             // Validation
             if (empty($patientId)) {
                 errorResponse('Paziente è obbligatorio');
@@ -36,13 +38,13 @@ try {
             if (empty($drugs)) {
                 errorResponse('Farmaci sono obbligatori');
             }
-            
+
             // Verify patient exists
             $patient = getPatientById($patientId);
             if (!$patient) {
                 errorResponse('Paziente non trovato', 404);
             }
-            
+
             // Create new prescription
             $newPrescription = [
                 'id' => generateId(),
@@ -50,14 +52,16 @@ try {
                 'patientName' => $patient['name'],
                 'date' => $date,
                 'drugs' => $drugs,
+                'dosage' => $dosage,
+                'duration' => $duration,
                 'notes' => $notes,
                 'createdAt' => date('Y-m-d H:i:s')
             ];
-            
+
             $prescriptions = readJSON(PRESCRIPTIONS_FILE);
             $prescriptions[] = $newPrescription;
             writeJSON(PRESCRIPTIONS_FILE, $prescriptions);
-            
+
             successResponse($newPrescription);
             break;
             
@@ -66,8 +70,10 @@ try {
             $patientId = trim($_POST['patientId'] ?? '');
             $date = trim($_POST['date'] ?? '');
             $drugs = trim($_POST['drugs'] ?? '');
+            $dosage = trim($_POST['dosage'] ?? '');
+            $duration = trim($_POST['duration'] ?? '');
             $notes = trim($_POST['notes'] ?? '');
-            
+
             // Validation
             if (empty($id)) {
                 errorResponse('ID ricetta è obbligatorio');
@@ -81,35 +87,37 @@ try {
             if (empty($drugs)) {
                 errorResponse('Farmaci sono obbligatori');
             }
-            
+
             // Verify patient exists
             $patient = getPatientById($patientId);
             if (!$patient) {
                 errorResponse('Paziente non trovato', 404);
             }
-            
+
             $prescriptions = readJSON(PRESCRIPTIONS_FILE);
             $found = false;
-            
+
             foreach ($prescriptions as &$prescription) {
                 if ($prescription['id'] === $id) {
                     $prescription['patientId'] = $patientId;
                     $prescription['patientName'] = $patient['name'];
                     $prescription['date'] = $date;
                     $prescription['drugs'] = $drugs;
+                    $prescription['dosage'] = $dosage;
+                    $prescription['duration'] = $duration;
                     $prescription['notes'] = $notes;
                     $prescription['updatedAt'] = date('Y-m-d H:i:s');
-                    
+
                     $found = true;
                     $updatedPrescription = $prescription;
                     break;
                 }
             }
-            
+
             if (!$found) {
                 errorResponse('Ricetta non trovata', 404);
             }
-            
+
             writeJSON(PRESCRIPTIONS_FILE, $prescriptions);
             successResponse($updatedPrescription);
             break;
@@ -253,8 +261,14 @@ try {
     <div class="drugs">
         <h3>Farmaci Prescritti:</h3>
         <p style="white-space: pre-line;"><?php echo htmlspecialchars($prescription['drugs']); ?></p>
+        <?php if (!empty($prescription['dosage'])): ?>
+        <p><strong>Posologia:</strong> <?php echo htmlspecialchars($prescription['dosage']); ?></p>
+        <?php endif; ?>
+        <?php if (!empty($prescription['duration'])): ?>
+        <p><strong>Durata:</strong> <?php echo htmlspecialchars($prescription['duration']); ?></p>
+        <?php endif; ?>
     </div>
-    
+
     <?php if (!empty($prescription['notes'])): ?>
     <div>
         <h3>Note:</h3>
