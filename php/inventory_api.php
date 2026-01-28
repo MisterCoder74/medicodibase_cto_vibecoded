@@ -142,7 +142,8 @@ try {
             $found = false;
             
             foreach ($medications as &$medication) {
-                if ($medication['id'] === $id) {
+                // Use loose comparison to handle string/number ID mismatches
+                if ($medication['id'] == $id) {
                     if ($medication['quantity'] <= 0) {
                         errorResponse('Farmaco non disponibile in magazzino', 400);
                     }
@@ -160,7 +161,10 @@ try {
             }
             
             writeJSON(INVENTORY_FILE, $medications);
-            successResponse(['message' => "$medicationName: 1 unità dispensata. Nuova quantità: {$medication['quantity']}"]);
+            successResponse([
+                'message' => "$medicationName: 1 unità dispensata. Nuova quantità: {$medication['quantity']}",
+                'data' => $medication
+            ]);
             break;
             
         case 'add_stock':

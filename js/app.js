@@ -1708,19 +1708,28 @@ function renderInventory() {
  * Populate medication select in prescription form
  */
 function populatePrescriptionMedicationSelect() {
+  console.log('Populating medication select. Total medications:', allMedications.length);
+  
   const select = document.getElementById('prescriptionMedicationSelect');
-  if (!select) return;
+  if (!select) {
+    console.error('prescriptionMedicationSelect element not found!');
+    return;
+  }
   
   select.innerHTML = '<option value="">-- Seleziona farmaco da dispensare --</option>';
   
-  allMedications.forEach(med => {
+  allMedications.forEach((med, index) => {
+    console.log(`Adding option ${index}: ID=${med.id}, Name=${med.name}, Qty=${med.quantity}`);
+    
     const option = document.createElement('option');
     const stockWarning = med.quantity < 5 ? ` ⚠️ (${med.quantity})` : ` (${med.quantity})`;
-    option.value = med.id;
+    option.value = String(med.id); // Ensure consistent string type
     option.textContent = med.name + stockWarning;
     option.disabled = med.quantity === 0; // Disable if out of stock
     select.appendChild(option);
   });
+  
+  console.log('Select list populated with', select.options.length - 1, 'medications');
 }
 
 /**
@@ -1849,9 +1858,33 @@ async function addStock(medId, amount) {
  * Dispense medication (reduce by 1)
  */
 async function dispenseMedication(medId) {
-  if (!medId) return; // User selected empty option
+  console.log('Dispensing medication:', medId, 'Type:', typeof medId);
+  
+  // Validate input
+  if (!medId || medId === '' || medId === 'undefined' || medId === 'null') {
+    console.log('No valid medication selected');
+    return; 
+  }
+  
+  // Find medication to verify it exists
+  const medication = allMedications.find(m => m.id == medId);
+  console.log('Found medication:', medication);
+  
+  if (!medication) {
+    alert('Errore: Farmaco non trovato nell\'inventario');
+    document.getElementById('prescriptionMedicationSelect').value = '';
+    return;
+  }
+  
+  if (medication.quantity <= 0) {
+    alert('Errore: Farmaco non disponibile in magazzino');
+    document.getElementById('prescriptionMedicationSelect').value = '';
+    return;
+  }
   
   try {
+    console.log('Making API request to dispense medication:', medId);
+    
     const response = await fetch('php/inventory_api.php?action=dispense', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1859,17 +1892,27 @@ async function dispenseMedication(medId) {
       cache: 'no-store'
     });
     
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('API Response:', data);
+    
     if (data.success) {
       alert(`✓ ${data.message}`);
-      await loadAllData();
+      await loadAllData(); // Reload all data to update UI
+      // Clear selection after successful dispensing
+      document.getElementById('prescriptionMedicationSelect').value = '';
     } else {
-      alert('Errore: ' + data.error);
+      alert('Errore: ' + (data.error || 'Errore sconosciuto'));
       document.getElementById('prescriptionMedicationSelect').value = '';
     }
   } catch (error) {
     console.error('Error dispensing medication:', error);
-    alert('Errore durante la dispensazione');
+    alert('Errore durante la dispensazione: ' + error.message);
     document.getElementById('prescriptionMedicationSelect').value = '';
   }
 }
