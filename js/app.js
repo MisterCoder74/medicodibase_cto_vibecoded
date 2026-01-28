@@ -7,7 +7,9 @@
 let allPatients = [];
 let allPrescriptions = [];
 let allAppointments = [];
+let allMedications = [];
 let currentCalendarDate = new Date();
+let medicationModal = null;
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
@@ -24,15 +26,17 @@ async function loadAllData() {
     showLoading();
 
     // Fetch all data with cache disabled
-    const [patientsRes, prescriptionsRes, appointmentsRes] = await Promise.all([
+    const [patientsRes, prescriptionsRes, appointmentsRes, inventoryRes] = await Promise.all([
       fetch('php/patients_api.php?action=list', { cache: 'no-store' }),
       fetch('php/prescriptions_api.php?action=list', { cache: 'no-store' }),
-      fetch('php/appointments_api.php?action=list', { cache: 'no-store' })
+      fetch('php/appointments_api.php?action=list', { cache: 'no-store' }),
+      fetch('php/inventory_api.php?action=list', { cache: 'no-store' })
     ]);
 
     const patientsData = await patientsRes.json();
     const prescriptionsData = await prescriptionsRes.json();
     const appointmentsData = await appointmentsRes.json();
+    const inventoryData = await inventoryRes.json();
 
     if (patientsData.success) {
       allPatients = patientsData.data.filter(p => !p.deleted);
@@ -43,10 +47,15 @@ async function loadAllData() {
     if (appointmentsData.success) {
       allAppointments = appointmentsData.data;
     }
+    if (inventoryData.success) {
+      allMedications = inventoryData.data;
+    }
 
     renderPatients();
     renderPrescriptions();
     renderCalendar();
+    renderInventory();
+    populatePrescriptionMedicationSelect();
     await loadSensitivePatients();
 
     hideLoading();
@@ -83,6 +92,13 @@ function initializeEventListeners() {
   document.getElementById('patientForm')?.addEventListener('submit', handlePatientSubmit);
   document.getElementById('prescriptionForm')?.addEventListener('submit', handlePrescriptionSubmit);
   document.getElementById('appointmentForm')?.addEventListener('submit', handleAppointmentSubmit);
+  document.getElementById('medicationForm')?.addEventListener('submit', handleMedicationSubmit);
+
+  // Initialize medication modal
+  const medicationModalEl = document.getElementById('medicationModal');
+  if (medicationModalEl) {
+    medicationModal = new bootstrap.Modal(medicationModalEl);
+  }
 }
 
 /**
@@ -1092,7 +1108,7 @@ function populateDocumentsTab(patient) {
 
       const documents = data.data && data.data.documents ? data.data.documents : [];
 
-		if (!data.success || documents.length === 0) {
+        if (!data.success || documents.length === 0) {
         documentsList.innerHTML = `
           <div class="text-center text-muted py-4">
             <i class="bi bi-folder" style="font-size: 3rem;"></i>
@@ -1636,4 +1652,238 @@ function formatDateItalian(dateString) {
     hour: '2-digit',
     minute: '2-digit'
   });
+}
+
+/*** INVENTORY MANAGEMENT FUNCTIONS ***/
+
+/**
+ * Render inventory table
+ */
+function renderInventory() {
+  const tbody = document.getElementById('inventoryTableBody');
+  if (!tbody) return;
+  
+  if (allMedications.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center">Nessun farmaco in magazzino</td></tr>';
+    return;
+  }
+  
+  // Sort by quantity (low stock first)
+  const sortedMeds = [...allMedications].sort((a, b) => a.quantity - b.quantity);
+  
+  tbody.innerHTML = sortedMeds.map(medication => {
+    const isLowStock = medication.quantity < 5;
+    const statusBadge = isLowStock 
+      ? `<span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Low Stock (${medication.quantity})</span>`
+      : `<span class="badge bg-success">${medication.quantity}</span>`;
+    
+    const rowClass = isLowStock ? 'table-danger' : '';
+    
+    return `
+      <tr class="${rowClass}">
+        <td>${escapeHtml(medication.name)}</td>
+        <td>${medication.quantity}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-sm btn-warning" onclick="editMedication('${medication.id}')">
+              <i class="bi bi-pencil"></i> Modifica
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteMedication('${medication.id}')">
+              <i class="bi bi-trash"></i> Elimina
+            </button>
+            <div class="btn-group btn-group-sm" role="group">
+              <button class="btn btn-info" onclick="addStock('${medication.id}', 10)">+10</button>
+              <button class="btn btn-info" onclick="addStock('${medication.id}', 20)">+20</button>
+              <button class="btn btn-info" onclick="addStock('${medication.id}', 50)">+50</button>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Populate medication select in prescription form
+ */
+function populatePrescriptionMedicationSelect() {
+  const select = document.getElementById('prescriptionMedicationSelect');
+  if (!select) return;
+  
+  select.innerHTML = '<option value="">-- Seleziona farmaco da dispensare --</option>';
+  
+  allMedications.forEach(med => {
+    const option = document.createElement('option');
+    const stockWarning = med.quantity < 5 ? ` ⚠️ (${med.quantity})` : ` (${med.quantity})`;
+    option.value = med.id;
+    option.textContent = med.name + stockWarning;
+    option.disabled = med.quantity === 0; // Disable if out of stock
+    select.appendChild(option);
+  });
+}
+
+/**
+ * Clear medication form
+ */
+function clearMedicationForm() {
+  document.getElementById('medicationId').value = '';
+  document.getElementById('medicationName').value = '';
+  document.getElementById('medicationQuantity').value = '';
+  document.getElementById('medicationModalTitle').textContent = 'Aggiungi Farmaco';
+  document.getElementById('saveMedicationBtn').textContent = 'Salva';
+}
+
+/**
+ * Edit medication
+ */
+function editMedication(medId) {
+  const medication = allMedications.find(m => m.id === medId);
+  if (!medication) return;
+  
+  document.getElementById('medicationId').value = medication.id;
+  document.getElementById('medicationName').value = medication.name;
+  document.getElementById('medicationQuantity').value = medication.quantity;
+  document.getElementById('medicationModalTitle').textContent = 'Modifica Farmaco';
+  document.getElementById('saveMedicationBtn').textContent = 'Aggiorna';
+  
+  if (medicationModal) {
+    medicationModal.show();
+  }
+}
+
+/**
+ * Handle medication form submit
+ */
+async function handleMedicationSubmit(e) {
+  e.preventDefault();
+  
+  const id = document.getElementById('medicationId').value;
+  const name = document.getElementById('medicationName').value.trim();
+  const quantity = parseInt(document.getElementById('medicationQuantity').value);
+  
+  if (!name || isNaN(quantity) || quantity < 0) {
+    alert('Input non valido');
+    return;
+  }
+  
+  const action = id ? 'edit' : 'add';
+  const url = 'php/inventory_api.php?action=' + action;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, name, quantity }),
+      cache: 'no-store'
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      alert(action === 'add' ? 'Farmaco aggiunto con successo' : 'Farmaco aggiornato');
+      if (medicationModal) medicationModal.hide();
+      clearMedicationForm();
+      await loadAllData();
+    } else {
+      alert('Errore: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Error saving medication:', error);
+    alert('Errore durante il salvataggio');
+  }
+}
+
+/**
+ * Delete medication
+ */
+async function deleteMedication(medId) {
+  if (!confirm('Sei sicuro di voler eliminare questo farmaco?')) return;
+  
+  try {
+    const response = await fetch('php/inventory_api.php?action=delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: medId }),
+      cache: 'no-store'
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      alert('Farmaco eliminato con successo');
+      await loadAllData();
+    } else {
+      alert('Errore: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Error deleting medication:', error);
+    alert('Errore durante l\'eliminazione');
+  }
+}
+
+/**
+ * Add stock to medication
+ */
+async function addStock(medId, amount) {
+  try {
+    const response = await fetch('php/inventory_api.php?action=add_stock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: medId, amount }),
+      cache: 'no-store'
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      alert(`Aggiunti ${amount} unit\u00e0`);
+      await loadAllData();
+    } else {
+      alert('Errore: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Error adding stock:', error);
+    alert('Errore durante l\'aggiornamento');
+  }
+}
+
+/**
+ * Dispense medication (reduce by 1)
+ */
+async function dispenseMedication(medId) {
+  if (!medId) return; // User selected empty option
+  
+  try {
+    const response = await fetch('php/inventory_api.php?action=dispense', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: medId }),
+      cache: 'no-store'
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      alert(`✓ ${data.message}`);
+      await loadAllData();
+    } else {
+      alert('Errore: ' + data.error);
+      document.getElementById('prescriptionMedicationSelect').value = '';
+    }
+  } catch (error) {
+    console.error('Error dispensing medication:', error);
+    alert('Errore durante la dispensazione');
+    document.getElementById('prescriptionMedicationSelect').value = '';
+  }
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.toString().replace(/[&<>"']/g, m => map[m]);
 }

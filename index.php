@@ -44,6 +44,11 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
+                    <i class="bi bi-box-seam"></i> Farmaci
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="sensitive-tab" data-bs-toggle="tab" data-bs-target="#sensitive" type="button" role="tab">
                     <i class="bi bi-exclamation-triangle-fill"></i> Pazienti Sensibili
                 </button>
@@ -131,6 +136,39 @@
                     </div>
                     <div class="calendar-grid" id="calendarGrid">
                         <!-- Calendar will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Tab -->
+            <div class="tab-pane fade" id="inventory" role="tabpanel">
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3><i class="bi bi-box-seam"></i> Gestione Farmaci</h3>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#medicationModal" 
+                                onclick="clearMedicationForm()">
+                            <i class="bi bi-plus-circle"></i> Aggiungi Farmaco
+                        </button>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong><i class="bi bi-info-circle"></i> Low Stock Alert:</strong> Farmaci con meno di 5 unità sono evidenziati in rosso.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="inventoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Nome Farmaco</th>
+                                    <th>Quantità</th>
+                                    <th>Stato</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <tr><td colspan="4" class="text-center">Caricamento...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -254,6 +292,13 @@
                         <div class="mb-3">
                             <label for="prescriptionNotes" class="form-label">Note</label>
                             <textarea class="form-control" id="prescriptionNotes" rows="3" placeholder="Note aggiuntive per il paziente..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="prescriptionMedicationSelect" class="form-label">Dispensa Farmaco (Opzionale)</label>
+                            <select class="form-select" id="prescriptionMedicationSelect" onchange="dispenseMedication(this.value)">
+                                <option value="">-- Seleziona farmaco da dispensare --</option>
+                            </select>
+                            <small class="text-muted">Selezionando un farmaco, la quantità in magazzino verrà ridotta di 1 unità</small>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
@@ -605,6 +650,35 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="bi bi-x-lg"></i> Chiudi
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medication Modal -->
+    <div class="modal fade" id="medicationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="medicationModalTitle">Aggiungi Farmaco</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="medicationForm">
+                        <input type="hidden" id="medicationId">
+                        <div class="mb-3">
+                            <label for="medicationName" class="form-label">Nome Farmaco *</label>
+                            <input type="text" class="form-control" id="medicationName" placeholder="es. Paracetamolo 500mg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="medicationQuantity" class="form-label">Quantità *</label>
+                            <input type="number" class="form-control" id="medicationQuantity" min="0" placeholder="0" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                            <button type="submit" class="btn btn-primary" id="saveMedicationBtn">Salva</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

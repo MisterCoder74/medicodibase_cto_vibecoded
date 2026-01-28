@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "name": "Paracetamolo 500mg",
+    "quantity": 45,
+    "createdAt": "2025-01-01 10:00:00",
+    "updatedAt": "2025-01-01 10:00:00"
+  },
+  {
+    "id": "2",
+    "name": "Ibuprofene 400mg",
+    "quantity": 3,
+    "createdAt": "2025-01-01 10:00:00",
+    "updatedAt": "2025-01-01 10:00:00"
+  },
+  {
+    "id": "3",
+    "name": "Amoxicillina 500mg",
+    "quantity": 12,
+    "createdAt": "2025-01-01 10:00:00",
+    "updatedAt": "2025-01-01 10:00:00"
+  },
+  {
+    "id": "4",
+    "name": "Aspirina 100mg",
+    "quantity": 2,
+    "createdAt": "2025-01-01 10:00:00",
+    "updatedAt": "2025-01-01 10:00:00"
+  },
+  {
+    "id": "5",
+    "name": "Metformina 500mg",
+    "quantity": 0,
+    "createdAt": "2025-01-01 10:00:00",
+    "updatedAt": "2025-01-01 10:00:00"
+  }
+]

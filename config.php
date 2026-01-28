@@ -12,6 +12,7 @@ define('PATIENTS_FILE', DATA_DIR . '/patients.json');
 define('PRESCRIPTIONS_FILE', DATA_DIR . '/prescriptions.json');
 define('APPOINTMENTS_FILE', DATA_DIR . '/appointments.json');
 define('DOCTOR_INFO_FILE', DATA_DIR . '/doctor_info.json');
+define('INVENTORY_FILE', DATA_DIR . '/inventory.json');
 
 // Appointment statuses
 define('STATUS_PENDING', 'pending');
