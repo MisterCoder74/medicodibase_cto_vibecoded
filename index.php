@@ -104,12 +104,13 @@
                                     <th>Paziente</th>
                                     <th>Data</th>
                                     <th>Farmaci</th>
+                                    <th>Farmaco Dispensato</th>
                                     <th>Note</th>
                                     <th>Azioni</th>
                                 </tr>
                             </thead>
                             <tbody id="prescriptionsTableBody">
-                                <tr><td colspan="5" class="text-center">Caricamento...</td></tr>
+                                <tr><td colspan="6" class="text-center">Caricamento...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -295,10 +296,10 @@
                         </div>
                         <div class="mb-3">
                             <label for="prescriptionMedicationSelect" class="form-label">Dispensa Farmaco (Opzionale)</label>
-                            <select class="form-select" id="prescriptionMedicationSelect" onchange="dispenseMedication(this.value)">
+                            <select class="form-select" id="prescriptionMedicationSelect">
                                 <option value="">-- Seleziona farmaco da dispensare --</option>
                             </select>
-                            <small class="text-muted">Selezionando un farmaco, la quantità in magazzino verrà ridotta di 1 unità</small>
+                            <small class="text-muted">Il farmaco verrà dispensato al salvataggio della ricetta</small>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
@@ -550,6 +551,7 @@
                                             <th>Farmaci</th>
                                             <th>Posologia</th>
                                             <th>Durata</th>
+                                            <th>Farmaco Dispensato</th>
                                             <th>Note</th>
                                             <th>Azioni</th>
                                         </tr>

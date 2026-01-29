@@ -146,15 +146,22 @@ function renderPrescriptions() {
   if (!tbody) return;
   
   if (allPrescriptions.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nessuna ricetta trovata</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nessuna ricetta trovata</td></tr>';
     return;
   }
   
-  tbody.innerHTML = allPrescriptions.map(prescription => `
+  tbody.innerHTML = allPrescriptions.map(prescription => {
+    // Check if medication was dispensed
+    const dispensedBadge = prescription.dispensedMedication 
+      ? `<span class="badge bg-success">✓ ${escapeHtml(prescription.dispensedMedication.name)}</span>`
+      : '<span class="badge bg-secondary">-</span>';
+    
+    return `
     <tr>
       <td>${escapeHtml(prescription.patientName)}</td>
       <td>${escapeHtml(prescription.date)}</td>
       <td><div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(prescription.drugs)}</div></td>
+      <td>${dispensedBadge}</td>
       <td>${escapeHtml(prescription.notes || '-')}</td>
       <td>
         <button class="btn btn-sm btn-success btn-action" onclick="printPrescription('${prescription.id}')">
@@ -168,7 +175,8 @@ function renderPrescriptions() {
         </button>
       </td>
     </tr>
-  `).join('');
+    `;
+  }).join('');
 }
 
 /**
@@ -553,6 +561,7 @@ function openPrescriptionModal() {
   document.getElementById('prescriptionForm').reset();
   document.getElementById('prescriptionId').value = '';
   document.getElementById('prescriptionDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('prescriptionMedicationSelect').value = ''; // Explicitly clear medication selection
   document.getElementById('prescriptionModalTitle').textContent = 'Nuova Ricetta';
 
   populatePatientSelect('prescriptionPatientId');
@@ -575,6 +584,7 @@ function editPrescription(id) {
   document.getElementById('prescriptionDosage').value = prescription.dosage || '';
   document.getElementById('prescriptionDuration').value = prescription.duration || '';
   document.getElementById('prescriptionNotes').value = prescription.notes || '';
+  document.getElementById('prescriptionMedicationSelect').value = ''; // Clear medication selection
   document.getElementById('prescriptionModalTitle').textContent = 'Modifica Ricetta';
 
   populatePatientSelect('prescriptionPatientId');
@@ -639,6 +649,49 @@ async function handlePrescriptionSubmit(e) {
   formData.append('dosage', document.getElementById('prescriptionDosage').value);
   formData.append('duration', document.getElementById('prescriptionDuration').value);
   formData.append('notes', document.getElementById('prescriptionNotes').value);
+  
+  // Get selected medication for dispensing
+  const medicationId = document.getElementById('prescriptionMedicationSelect').value;
+  let dispensedMedication = null;
+
+  // If medication selected, prepare dispensing data and dispense first
+  if (medicationId) {
+    try {
+      // Find medication in our local data
+      const medication = allMedications.find(m => m.id == medicationId);
+      if (!medication) {
+        alert('Errore: Farmaco non trovato nell\'inventario');
+        return;
+      }
+      
+      if (medication.quantity <= 0) {
+        alert('Errore: Farmaco non disponibile in magazzino');
+        return;
+      }
+      
+      // Prepare dispensed medication info
+      dispensedMedication = {
+        id: medication.id,
+        name: medication.name,
+        quantity: 1,
+        dispensedAt: new Date().toISOString()
+      };
+      
+      // Add dispensedMedication to form data
+      formData.append('dispensedMedication', JSON.stringify(dispensedMedication));
+      
+      // Dispense the medication first
+      const dispenseSuccess = await dispenseMedicationNow(medicationId);
+      if (!dispenseSuccess) {
+        alert('Errore nella dispensazione del farmaco');
+        return;
+      }
+    } catch (error) {
+      console.error('Error preparing medication dispensing:', error);
+      alert('Errore nella preparazione della dispensazione: ' + error.message);
+      return;
+    }
+  }
 
   try {
     const response = await fetch('./php/prescriptions_api.php', {
@@ -650,15 +703,22 @@ async function handlePrescriptionSubmit(e) {
     const data = await response.json();
 
     if (data.success) {
-      showSuccess(action === 'add' ? 'Ricetta aggiunta con successo' : 'Ricetta modificata con successo');
+      const medName = dispensedMedication 
+        ? ` e ${dispensedMedication.name} dispensato`
+        : '';
+      showSuccess('Ricetta salvata' + medName);
+      
+      // Clear medication selection after successful save
+      document.getElementById('prescriptionMedicationSelect').value = '';
+      
       bootstrap.Modal.getInstance(document.getElementById('prescriptionModal')).hide();
       loadAllData();
     } else {
-      showError(data.error || 'Errore durante il salvataggio');
+      showError('Errore durante il salvataggio: ' + (data.error || 'Errore sconosciuto'));
     }
   } catch (error) {
     console.error('Error saving prescription:', error);
-    showError('Errore durante il salvataggio');
+    showError('Errore durante il salvataggio: ' + error.message);
   }
 }
 
@@ -1024,11 +1084,18 @@ function populatePrescriptionsTab(patientId) {
 
     patientPrescriptions.forEach(prescription => {
       const row = document.createElement('tr');
+      
+      // Check if medication was dispensed
+      const dispensedBadge = prescription.dispensedMedication 
+        ? `<span class="badge bg-success">✓ ${escapeHtml(prescription.dispensedMedication.name)}</span>`
+        : '<span class="badge bg-secondary">-</span>';
+      
       row.innerHTML = `
         <td>${escapeHtml(prescription.date)}</td>
         <td><div style="max-width: 300px; white-space: pre-wrap;">${escapeHtml(prescription.drugs)}</div></td>
         <td>${escapeHtml(prescription.dosage || '-')}</td>
         <td>${escapeHtml(prescription.duration || '-')}</td>
+        <td>${dispensedBadge}</td>
         <td><div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(prescription.notes || '-')}</div></td>
         <td>
           <button class="btn btn-sm btn-success btn-action" onclick="printPrescription('${prescription.id}')" title="Stampa">
@@ -1512,6 +1579,7 @@ function addPrescriptionFromDetail() {
   document.getElementById('prescriptionDosage').value = '';
   document.getElementById('prescriptionDuration').value = '';
   document.getElementById('prescriptionNotes').value = '';
+  document.getElementById('prescriptionMedicationSelect').value = ''; // Clear medication selection
   document.getElementById('prescriptionModalTitle').textContent = 'Nuova Ricetta';
 
   populatePatientSelect('prescriptionPatientId', currentPatientId);
@@ -1914,6 +1982,51 @@ async function dispenseMedication(medId) {
     console.error('Error dispensing medication:', error);
     alert('Errore durante la dispensazione: ' + error.message);
     document.getElementById('prescriptionMedicationSelect').value = '';
+  }
+}
+
+/**
+ * Dispense medication now (used during prescription save)
+ */
+async function dispenseMedicationNow(medId) {
+  console.log('Dispensing medication during save:', medId, 'Type:', typeof medId);
+  
+  // Validate input
+  if (!medId || medId === '' || medId === 'undefined' || medId === 'null') {
+    console.log('No valid medication selected');
+    return false; 
+  }
+  
+  try {
+    console.log('Making API request to dispense medication:', medId);
+    
+    const response = await fetch('php/inventory_api.php?action=dispense', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: medId }),
+      cache: 'no-store'
+    });
+    
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('API Response:', data);
+    
+    if (data.success) {
+      console.log('Medication dispensed successfully:', data.message);
+      return true;
+    } else {
+      alert('Errore: ' + (data.error || 'Errore sconosciuto'));
+      return false;
+    }
+  } catch (error) {
+    console.error('Error dispensing medication:', error);
+    alert('Errore durante la dispensazione: ' + error.message);
+    return false;
   }
 }
 

@@ -27,6 +27,17 @@ try {
             $dosage = trim($_POST['dosage'] ?? '');
             $duration = trim($_POST['duration'] ?? '');
             $notes = trim($_POST['notes'] ?? '');
+            $dispensedMedication = null;
+
+            // Handle dispensed medication if provided
+            if (isset($_POST['dispensedMedication']) && !empty($_POST['dispensedMedication'])) {
+                $dispensedMedicationData = $_POST['dispensedMedication'];
+                if (is_string($dispensedMedicationData)) {
+                    $dispensedMedication = json_decode($dispensedMedicationData, true);
+                } else {
+                    $dispensedMedication = $dispensedMedicationData;
+                }
+            }
 
             // Validation
             if (empty($patientId)) {
@@ -55,7 +66,9 @@ try {
                 'dosage' => $dosage,
                 'duration' => $duration,
                 'notes' => $notes,
-                'createdAt' => date('Y-m-d H:i:s')
+                'dispensedMedication' => $dispensedMedication,
+                'createdAt' => date('Y-m-d H:i:s'),
+                'updatedAt' => date('Y-m-d H:i:s')
             ];
 
             $prescriptions = readJSON(PRESCRIPTIONS_FILE);
@@ -73,6 +86,17 @@ try {
             $dosage = trim($_POST['dosage'] ?? '');
             $duration = trim($_POST['duration'] ?? '');
             $notes = trim($_POST['notes'] ?? '');
+            $dispensedMedication = null;
+
+            // Handle dispensed medication if provided
+            if (isset($_POST['dispensedMedication']) && !empty($_POST['dispensedMedication'])) {
+                $dispensedMedicationData = $_POST['dispensedMedication'];
+                if (is_string($dispensedMedicationData)) {
+                    $dispensedMedication = json_decode($dispensedMedicationData, true);
+                } else {
+                    $dispensedMedication = $dispensedMedicationData;
+                }
+            }
 
             // Validation
             if (empty($id)) {
@@ -106,6 +130,7 @@ try {
                     $prescription['dosage'] = $dosage;
                     $prescription['duration'] = $duration;
                     $prescription['notes'] = $notes;
+                    $prescription['dispensedMedication'] = $dispensedMedication;
                     $prescription['updatedAt'] = date('Y-m-d H:i:s');
 
                     $found = true;
